@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>松阳话 TTS 数据 - 吴语上丽片</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+
+        h1 {
+            color: #fff;
+            margin-bottom: 20px;
+            text-align: center;
+            font-size: 1.5rem;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 450px;
+            background: #fff;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        .image-container {
+            position: relative;
+            width: 100%;
+            aspect-ratio: 384 / 854;
+            background: #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+        }
+
+        .nav-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            display: flex;
+        }
+
+        .nav-area {
+            flex: 1;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .nav-area:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .controls {
+            padding: 20px;
+            background: #f8f9fa;
+        }
+
+        .section-info {
+            text-align: center;
+            margin-bottom: 15px;
+            color: #333;
+        }
+
+        .section-number {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #1a1a2e;
+        }
+
+        .section-time {
+            font-size: 0.85rem;
+            color: #666;
+            margin-top: 5px;
+        }
+
+        .audio-section {
+            margin-bottom: 15px;
+        }
+
+        .audio-player {
+            width: 100%;
+            height: 40px;
+            border-radius: 20px;
+        }
+
+        .nav-buttons {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-btn {
+            flex: 1;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            background: #1a1a2e;
+            color: #fff;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .nav-btn:hover:not(:disabled) {
+            background: #2d2d44;
+            transform: translateY(-2px);
+        }
+
+        .nav-btn:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+
+        .page-indicator {
+            padding: 10px 20px;
+            background: #e9ecef;
+            border-radius: 20px;
+            font-weight: bold;
+            color: #333;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .keyboard-hint {
+            margin-top: 15px;
+            text-align: center;
+            font-size: 0.8rem;
+            color: #888;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: #e0e0e0;
+            margin-bottom: 15px;
+            border-radius: 2px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #1a1a2e;
+            transition: width 0.3s;
+        }
+
+        @media (max-width: 500px) {
+            body {
+                padding: 10px;
+            }
+            h1 {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>🎵 松阳话 TTS 数据播放器</h1>
+    
+    <div class="container">
+        <div class="image-container">
+            <img id="currentImage" src="" alt="Section Image">
+            <div class="nav-overlay">
+                <div class="nav-area" onclick="goPrev()" title="点击左侧返回上一页"></div>
+                <div class="nav-area" onclick="goNext()" title="点击右侧进入下一页"></div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            
+            <div class="section-info">
+                <div class="section-number">第 <span id="sectionNum">1</span> / <span id="totalSections">48</span> 段</div>
+                <div class="section-time" id="sectionTime">0:00 - 0:00</div>
+            </div>
+            
+            <div class="audio-section">
+                <audio id="audioPlayer" class="audio-player" controls>
+                    <source id="audioSource" src="" type="audio/mpeg">
+                    您的浏览器不支持音频播放。
+                </audio>
+            </div>
+            
+            <div class="nav-buttons">
+                <button class="nav-btn" id="prevBtn" onclick="goPrev()">
+                    ← 上一个
+                </button>
+                <div class="page-indicator">
+                    <span id="currentPage">1</span>/<span id="totalPages">48</span>
+                </div>
+                <button class="nav-btn" id="nextBtn" onclick="goNext()">
+                    下一个 →
+                </button>
+            </div>
+            
+            <div class="keyboard-hint">
+                💡 快捷键：← → 方向键翻页 | 空格键播放/暂停
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Data will be populated from sections_summary.json
+        let sections = [];
+        let currentIndex = 0;
+
+        // Load sections data
+        async function loadData() {
+            try {
+                const response = await fetch('sections_summary.json');
+                sections = await response.json();
+                document.getElementById('totalSections').textContent = sections.length;
+                document.getElementById('totalPages').textContent = sections.length;
+                updateDisplay();
+            } catch (error) {
+                console.error('Failed to load sections:', error);
+                // Fallback: create sections array based on known structure
+                sections = Array.from({length: 48}, (_, i) => ({
+                    section: i + 1,
+                    image: `section_${String(i + 1).padStart(3, '0')}.jpg`,
+                    audio: `section_${String(i + 1).padStart(3, '0')}.mp3`,
+                    start_time: 0,
+                    end_time: 0,
+                    duration: 0
+                }));
+                document.getElementById('totalSections').textContent = sections.length;
+                document.getElementById('totalPages').textContent = sections.length;
+                updateDisplay();
+            }
+        }
+
+        function updateDisplay() {
+            const section = sections[currentIndex];
+            
+            // Update image
+            document.getElementById('currentImage').src = section.image;
+            
+            // Update audio
+            const audioPlayer = document.getElementById('audioPlayer');
+            const audioSource = document.getElementById('audioSource');
+            
+            // Always reload audio when section changes to ensure proper playback
+            audioSource.src = section.audio;
+            audioPlayer.load();
+            
+            // Update info
+            document.getElementById('sectionNum').textContent = section.section;
+            document.getElementById('currentPage').textContent = section.section;
+            
+            const formatTime = (s) => {
+                const m = Math.floor(s / 60);
+                const sec = Math.floor(s % 60);
+                return `${m}:${sec.toString().padStart(2, '0')}`;
+            };
+            
+            document.getElementById('sectionTime').textContent = 
+                `${formatTime(section.start_time)} - ${formatTime(section.end_time)} (${section.duration.toFixed(1)}s)`;
+            
+            // Update buttons
+            document.getElementById('prevBtn').disabled = currentIndex === 0;
+            document.getElementById('nextBtn').disabled = currentIndex === sections.length - 1;
+            
+            // Update progress bar
+            const progress = ((currentIndex + 1) / sections.length) * 100;
+            document.getElementById('progressFill').style.width = `${progress}%`;
+        }
+
+        function goPrev() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                updateDisplay();
+            }
+        }
+
+        function goNext() {
+            if (currentIndex < sections.length - 1) {
+                currentIndex++;
+                updateDisplay();
+            }
+        }
+
+        // Keyboard navigation
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'ArrowLeft') {
+                goPrev();
+            } else if (e.key === 'ArrowRight') {
+                goNext();
+            } else if (e.key === ' ') {
+                e.preventDefault();
+                const audioPlayer = document.getElementById('audioPlayer');
+                if (audioPlayer.paused) {
+                    audioPlayer.play();
+                } else {
+                    audioPlayer.pause();
+                }
+            }
+        });
+
+        // Initialize
+        loadData();
+    </script>
+</body>
+</html>
